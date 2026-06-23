@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.edubuddy.backend.entity.User;
@@ -15,10 +16,23 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     // Signup
-    public User saveUser(User user) {
-        return userRepository.save(user);
+    // Signup
+public User saveUser(User user) {
+
+    // Check if email already exists
+    if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+        throw new RuntimeException("Email already registered!");
     }
+
+    // Hash Password
+    user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+    return userRepository.save(user);
+}
 
     // Login
     public String loginUser(User user) {
@@ -27,12 +41,13 @@ public class UserService {
 
         if (existingUser.isPresent()) {
 
-            if (existingUser.get().getPassword().equals(user.getPassword())) {
+            if (passwordEncoder.matches(user.getPassword(),
+                    existingUser.get().getPassword())) {
+
                 return "Login Successful";
-            } else {
-                return "Invalid Password";
             }
 
+            return "Invalid Password";
         }
 
         return "User Not Found";
@@ -60,7 +75,15 @@ public class UserService {
 
             user.setFullName(updatedUser.getFullName());
             user.setEmail(updatedUser.getEmail());
-            user.setPassword(updatedUser.getPassword());
+
+            // Update password only if provided
+            if (updatedUser.getPassword() != null &&
+                !updatedUser.getPassword().isEmpty()) {
+
+                user.setPassword(
+                        passwordEncoder.encode(updatedUser.getPassword()));
+            }
+
             user.setCollege(updatedUser.getCollege());
             user.setBranch(updatedUser.getBranch());
             user.setYear(updatedUser.getYear());
@@ -74,4 +97,5 @@ public class UserService {
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
+
 }
