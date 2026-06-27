@@ -28,11 +28,20 @@ public class User {
 
     private String year;
 
+    // AI Partner Matching Fields
+    private String skills;
+
+    private String interests;
+
+    private Integer studyHours;
+
     public User() {
     }
 
     public User(Long id, String fullName, String email, String password,
-                String college, String branch, String year) {
+                String college, String branch, String year,
+                String skills, String interests, Integer studyHours) {
+
         this.id = id;
         this.fullName = fullName;
         this.email = email;
@@ -40,6 +49,9 @@ public class User {
         this.college = college;
         this.branch = branch;
         this.year = year;
+        this.skills = skills;
+        this.interests = interests;
+        this.studyHours = studyHours;
     }
 
     public Long getId() {
@@ -96,5 +108,29 @@ public class User {
 
     public void setYear(String year) {
         this.year = year;
+    }
+
+    public String getSkills() {
+        return skills;
+    }
+
+    public void setSkills(String skills) {
+        this.skills = skills;
+    }
+
+    public String getInterests() {
+        return interests;
+    }
+
+    public void setInterests(String interests) {
+        this.interests = interests;
+    }
+
+    public Integer getStudyHours() {
+        return studyHours;
+    }
+
+    public void setStudyHours(Integer studyHours) {
+        this.studyHours = studyHours;
     }
 }

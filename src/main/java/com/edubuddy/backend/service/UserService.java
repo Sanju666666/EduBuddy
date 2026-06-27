@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.edubuddy.backend.entity.User;
+import com.edubuddy.backend.jwt.JwtUtil;
 import com.edubuddy.backend.repository.UserRepository;
 
 @Service
@@ -19,38 +20,38 @@ public class UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    // Signup
-    // Signup
-public User saveUser(User user) {
+    @Autowired
+    private JwtUtil jwtUtil;
 
-    // Check if email already exists
-    if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-        throw new RuntimeException("Email already registered!");
+    // Signup
+    public User saveUser(User user) {
+
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new RuntimeException("Email already registered!");
+        }
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        return userRepository.save(user);
     }
-
-    // Hash Password
-    user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-    return userRepository.save(user);
-}
 
     // Login
     public String loginUser(User user) {
 
         Optional<User> existingUser = userRepository.findByEmail(user.getEmail());
 
-        if (existingUser.isPresent()) {
+        if (existingUser.isEmpty()) {
+            return "User Not Found";
+        }
 
-            if (passwordEncoder.matches(user.getPassword(),
-                    existingUser.get().getPassword())) {
-
-                return "Login Successful";
-            }
+        if (!passwordEncoder.matches(
+                user.getPassword(),
+                existingUser.get().getPassword())) {
 
             return "Invalid Password";
         }
 
-        return "User Not Found";
+        return jwtUtil.generateToken(existingUser.get().getEmail());
     }
 
     // Get All Users
@@ -76,9 +77,8 @@ public User saveUser(User user) {
             user.setFullName(updatedUser.getFullName());
             user.setEmail(updatedUser.getEmail());
 
-            // Update password only if provided
             if (updatedUser.getPassword() != null &&
-                !updatedUser.getPassword().isEmpty()) {
+                    !updatedUser.getPassword().isEmpty()) {
 
                 user.setPassword(
                         passwordEncoder.encode(updatedUser.getPassword()));
@@ -87,6 +87,11 @@ public User saveUser(User user) {
             user.setCollege(updatedUser.getCollege());
             user.setBranch(updatedUser.getBranch());
             user.setYear(updatedUser.getYear());
+
+            // AI Partner Matching Fields
+            user.setSkills(updatedUser.getSkills());
+            user.setInterests(updatedUser.getInterests());
+            user.setStudyHours(updatedUser.getStudyHours());
 
             return userRepository.save(user);
 
@@ -97,5 +102,4 @@ public User saveUser(User user) {
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
-
 }
